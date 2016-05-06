@@ -1,0 +1,43 @@
+#!/bin/bash
+
+######################## SETUP START ########################
+DIR="/mnt/pool/music/Podcasts/"
+HOWMANY=10
+FEEDS="
+http://raumzeit-podcast.de/feed/mp3/
+http://chaosradio.ccc.de/chaosradio-latest.rss
+http://cre.fm/feed/mp3
+http://not-safe-for-work.de/feed/mp3/
+http://feeds.feedburner.com/wrint/wrint
+http://alternativlos.org/alternativlos.rss
+http://freakshow.fm/feed/mp3/
+http://in-trockenen-buechern.de/feed/mp3/
+http://resonator-podcast.de/?feed=mp3
+http://feeds.feedburner.com/MonoxydsDieWeisheit
+http://bitstaub.diskordia.org/?feed=bitstaub
+http://zahlensender.net/?feed=feed-mp3
+http://metaebene.me/feed/mp3/
+http://minkorrekt.de/feed/mp3/
+http://n00bcore.de/feed/mp3
+http://requestforcomments.de/feed/mp3
+"
+######################### SETUP END #########################
+
+function podcatch
+{
+	wget --no-check-certificate -q -O - -t 3 -T 5 "$1" | grep -oi 'https\?://[a-z\./0-9_\-]*\.mp3' | head -n $HOWMANY | while IFS= read -r EpisodeURL; do
+		FILENAME=`basename "$EpisodeURL"`
+		if [ -f "$FILENAME" ]
+		then
+			echo "$FILENAME already exists."
+		else
+			echo "$FILENAME not found. Downloading now..."
+			wget --no-check-certificate -nc -t 3 -T 5 -O "$FILENAME" "$EpisodeURL"
+		fi
+	done
+}
+
+cd "$DIR"
+echo "$FEEDS" | grep "http" | while IFS= read -r FeedURL; do
+	podcatch "$FeedURL"
+done
